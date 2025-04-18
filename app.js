@@ -1,31 +1,56 @@
 // app.js
-const http = require("http");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
+
 const app = express();
 
+// Middleware
 app.use(cors());
+app.use(bodyParser.json());
 
-// Connect to database
+// Temperature Data Schema
+const tempSchema = new mongoose.Schema({
+  ambientTemp: { type: Number, required: true },
+  skinTemp: { type: Number, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
+
+const Temperature = mongoose.model("Temperature", tempSchema);
+
+// Database Connection
 mongoose
-  .connect(process.env.DB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("Connected to database!");
-  })
-  .catch((err) => {
-    console.log("Failed to connect to database", err);
-  });
+  .connect(process.env.DB_URI)
+  .then(() => console.log("✅ Connected to database"))
+  .catch((err) => console.error("❌ Database connection error:", err));
+
+// POST Endpoint for Temperature Data
+app.post("/api/temperatures", async (req, res) => {
+  try {
+    const { ambientTemp, skinTemp } = req.body;
+
+    // Basic validation
+    if (typeof ambientTemp !== "number" || typeof skinTemp !== "number") {
+      return res.status(400).json({ error: "Invalid temperature values" });
+    }
+
+    const newTemp = new Temperature({
+      ambientTemp,
+      skinTemp,
+    });
+
+    const savedTemp = await newTemp.save();
+    res.status(201).json(savedTemp);
+  } catch (error) {
+    console.error("Error saving temperature:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
