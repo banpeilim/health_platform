@@ -49,6 +49,18 @@ app.post("/api/temperatures", async (req, res) => {
   }
 });
 
+app.get("/api/temperatures", async (req, res) => {
+  try {
+    // Find all temperature records and sort by timestamp in descending order (newest first)
+    const temperatures = await Temperature.find().sort({ timestamp: -1 });
+
+    res.status(200).json(temperatures);
+  } catch (error) {
+    console.error("Error retrieving temperatures:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
