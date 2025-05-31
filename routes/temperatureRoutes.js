@@ -4,11 +4,25 @@ const Temperature = require("../models/Temperature");
 
 router.post("/", async (req, res) => {
   try {
-    const { ambientTemp, skinTemp } = req.body;
+    const { ambientTemp, skinTemp, userId } = req.body;
+
+    // Validate input types
     if (typeof ambientTemp !== "number" || typeof skinTemp !== "number") {
-      return res.status(400).json({ error: "Invalid temperature values" });
+      return res
+        .status(400)
+        .json({ error: "Temperature values must be numbers" });
     }
-    const newTemp = new Temperature({ ambientTemp, skinTemp });
+
+    if (typeof userId !== "string" || userId.trim() === "") {
+      return res.status(400).json({ error: "Valid userId is required" });
+    }
+
+    const newTemp = new Temperature({
+      ambientTemp,
+      skinTemp,
+      userId,
+    });
+
     const savedTemp = await newTemp.save();
     res.status(201).json(savedTemp);
   } catch (error) {
