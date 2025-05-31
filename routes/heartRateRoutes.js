@@ -4,16 +4,35 @@ const HeartRate = require("../models/HeartRate");
 
 router.post("/", async (req, res) => {
   try {
-    const { bpm } = req.body;
+    const { bpm, userId } = req.body;
+
+    // Validate bpm
     if (typeof bpm !== "number" || bpm < 20 || bpm > 250) {
-      return res.status(400).json({ error: "Invalid heart rate value" });
+      return res.status(400).json({
+        error: "Heart rate must be a number between 20 and 250 BPM",
+      });
     }
-    const newHeartRate = new HeartRate({ bpm });
+
+    // Validate userId
+    if (!userId || typeof userId !== "string" || userId.trim() === "") {
+      return res.status(400).json({
+        error: "Valid userId is required",
+      });
+    }
+
+    // Create and save new record
+    const newHeartRate = new HeartRate({
+      bpm,
+      userId: userId.trim(), // Store trimmed version
+    });
+
     const savedHeartRate = await newHeartRate.save();
     res.status(201).json(savedHeartRate);
   } catch (error) {
     console.error("Error saving heart rate:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      error: "Server error while saving heart rate data",
+    });
   }
 });
 
